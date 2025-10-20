@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useRef } from "react";
 import TaskList from "../molecules/TaskList";
+//import TaskList from "../Flinz/TaskList";
 import { Container, Typography, CircularProgress, Box, Grid, Paper } from "@mui/material";
-import type { TaskItemDto } from "../../types/TaskItemDto";
+import type { TaskItemDto, Status } from "../../types/TaskItemDto";
 import AddButton from "../atoms/AddButton";
 
 interface TasksPageProps {
@@ -13,9 +14,15 @@ interface TasksPageProps {
 }
 
 const TasksPage: React.FC<TasksPageProps> = ({ tasks, loading, error, onAddTask }) => {
-  const todoTasks = tasks.filter((task) => task.status === 0);
-  const inProgressTasks = tasks.filter((task) => task.status === 1);
-  const doneTasks = tasks.filter((task) => task.status === 2);
+
+  const containerRefs = {
+    todo: useRef<HTMLDivElement | null>(null),
+    inProgress: useRef<HTMLDivElement | null>(null),
+    done: useRef<HTMLDivElement | null>(null),
+  };
+  const todoTasks = tasks.filter((task) => task.status === "ToDo");
+  const inProgressTasks = tasks.filter((task) => task.status === "InProgress");
+  const doneTasks = tasks.filter((task) => task.status === "Done");
 
   return (
     <>
@@ -31,22 +38,26 @@ const TasksPage: React.FC<TasksPageProps> = ({ tasks, loading, error, onAddTask 
       {error && <Typography color="error">{error}</Typography>}
 
       {!loading && !error && (
-        <Grid container spacing={3} minHeight={700}>
+        <Grid container spacing={3} minHeight={(todoTasks.length + 2) * 220}>
           <Grid size={{xs:12, md:4}}>
-            <Paper sx={{ p: 2, height: '100%', bgcolor: 'skyblue' }}>
-              <Typography variant="h6" gutterBottom>To Do</Typography>
-              <div>
-                <AddButton onClick={onAddTask} />
-              </div>
-              <TaskList tasks={todoTasks} />
-            </Paper>
+            <Box component={"div"} ref={containerRefs.todo} width={"100%"} height={"100%"}>
+                <Paper sx={{ p: 2, height: '100%', bgcolor: 'skyblue' }}>
+                  <Typography variant="h6" gutterBottom>To Do</Typography>
+                  <div>
+                    <AddButton onClick={onAddTask} />
+                  </div>
+                  <TaskList tasks={todoTasks} />
+                </Paper>
+            </Box>
           </Grid>
-
+          
           <Grid size={{xs:12, md:4}}>
-            <Paper sx={{ p: 2, height: '100%', bgcolor: '#FFC067' }}>
-              <Typography variant="h6" gutterBottom>In Progress</Typography>
-              <TaskList tasks={inProgressTasks} />
-            </Paper>
+            <Box component={"div"} ref={containerRefs.inProgress} width={"100%"} height={"100%"}>
+              <Paper sx={{ p: 2, height: '100%', bgcolor: '#FFC067' }}>
+                <Typography variant="h6" gutterBottom>In Progress</Typography>
+                <TaskList tasks={inProgressTasks} />
+              </Paper>
+            </Box>
           </Grid>
 
           <Grid size={{xs:12, md:4}}>

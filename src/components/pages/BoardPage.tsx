@@ -4,6 +4,7 @@ import AddTaskDialogTemplate from "../templates/AddTaskDialogTemplate";
 import AddButton from "../atoms/AddButton";
 import TasksPage from "../templates/TasksPage";
 import type { TaskItemDto } from "../../types/TaskItemDto";
+import TasksBoard from "../Flinz/TasksBoard";
 
 const BoardPage: React.FC = () => {
   
@@ -64,6 +65,8 @@ const BoardPage: React.FC = () => {
           loading,
         }}
       />
+
+      <TasksBoard />
 
       <TasksPage tasks={tasks} loading={loading} onAddTask={() => setDialogOpen(true)} refresh={fetchTasks} />
     </>

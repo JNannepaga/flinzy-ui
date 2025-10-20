@@ -7,7 +7,7 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task }) => (
-  <Card variant="outlined" sx={{ mb: 2, minHeight: 150 }}>
+  <Card variant="outlined" sx={{ mb: 2, height: 200, maxHeight: 200 }}>
     <CardContent>
       <Typography variant="h6">{task.name}</Typography>
       <Typography variant="body2" color="text.secondary" dangerouslySetInnerHTML={{ __html: task.description || "" }} />
