@@ -4,10 +4,11 @@ import type { TaskItemDto } from "../../types/TaskItemDto";
 
 interface TaskCardProps {
   task: TaskItemDto;
+  hide?: boolean;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task }) => (
-  <Card variant="outlined" sx={{ mb: 2, height: 200, maxHeight: 200 }}>
+const TaskCard: React.FC<TaskCardProps> = ({ task, hide }) => (
+  <Card variant="outlined" sx={{height: 200, maxHeight: 200, my: 3, visibility: !!hide ? 'hidden' : 'visible'}}>
     <CardContent>
       <Typography variant="h6">{task.name}</Typography>
       <Typography variant="body2" color="text.secondary" dangerouslySetInnerHTML={{ __html: task.description || "" }} />

@@ -68,7 +68,7 @@ const BoardPage: React.FC = () => {
 
       <TasksBoard />
 
-      <TasksPage tasks={tasks} loading={loading} onAddTask={() => setDialogOpen(true)} refresh={fetchTasks} />
+      <TasksPage tasks={tasks} loading={loading} onAddTask={() => setDialogOpen(true)} refresh={fetchTasks} onSortEnd={(sortedTasks)=>{setTasks(sortedTasks)}}/>
     </>
   );
 };

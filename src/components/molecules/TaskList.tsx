@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import TaskCard from "../atoms/TaskCard";
 import type { TaskItemDto } from "../../types/TaskItemDto";
+import { Box } from "@mui/material";
 
 interface TaskListProps {
   tasks: TaskItemDto[];
+  onDragEnd: (sortedTasks: TaskItemDto[]) => void;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
+const TaskList: React.FC<TaskListProps> = ({ tasks, onDragEnd }) => {
   const [orderedTasks, setOrderedTasks] = useState<TaskItemDto[]>(tasks);
   const containerRef = useRef<HTMLDivElement | null>(null);
   
@@ -48,30 +50,41 @@ const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
         const container = containerRef.current;
         if (!container) return { ...prev, x: newX, y: newY };
 
-        // Create an "others" list (all items except the dragged one)
-        const others = orderedTasks.filter(t => t.id !== prev.task.id);
+        // Use a single "reference point" that represents where the *center* of the dragged card
+        // would be given the current pointer position and the initial click offset.
+        // This normalizes clicks made at top/middle/bottom of the card and makes up & down shifts symmetric.
+        //
+        // pointerY = ev.clientY (the finger / mouse location)
+        // prev.offsetY = where inside the card the pointer originally grabbed it (distance from card top)
+        // prev.height  = card height (you said fixed 200)
+        // referenceY = pointerY + (cardCenter - offsetY)
+        //            = pointerY + (height/2 - offsetY)
+        // compare referenceY against each sibling's midpoint to decide insertion index.
+        const pointerY = ev.clientY;
+        const referenceY = pointerY + (prev.height / 2 - prev.offsetY);
 
-        // Determine target insertion index by comparing pointer Y to midpoint of visible children (skipping the dragged one)
+        // Build list of children, skipping the dragged element
         const children = Array.from(container.children) as HTMLElement[];
-        let targetIndex = others.length;
+        let targetIndex = orderedTasks.filter(t => t.id !== prev.task.id).length;
         let seen = 0;
         for (let i = 0; i < children.length; i++) {
-          // orderedTasks includes the dragged item, so use it to align children -> task mapping
-          const mappedTask = orderedTasks[i];
-          if (!mappedTask) continue;
-          if (mappedTask.id === prev.task.id) continue; // skip dragged's original element
-          
           const child = children[i];
+          if (!child) continue;
+          if(child.dataset?.taskId === prev.task.id) continue;
+
           const rect = child.getBoundingClientRect();
-          const midY = rect.top + rect.height / 2;
-          if (newY < midY) {
+          const childMid = rect.top + rect.height / 2;
+
+          // use referenceY (not raw pointer or box top/bottom) so clicks at different offsets behave correctly
+          if (referenceY < childMid) {
             targetIndex = seen;
             break;
           }
           seen++;
         }
 
-        // Build new ordered array where dragged item is removed then inserted at targetIndex
+        // Rebuild ordered list with dragged item removed then inserted at targetIndex
+        const others = orderedTasks.filter(t => t.id !== prev.task.id);
         const updated = [...others];
         updated.splice(targetIndex, 0, prev.task);
         setOrderedTasks(updated);
@@ -84,8 +97,16 @@ const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
         };
       });
     };
+
+    const onPointerUp = (ev: PointerEvent) => {
+      onDragEnd(orderedTasks);
+      setDrag(null);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    }
     
     window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onPointerUp);
   }
 
   useEffect(() => {
@@ -99,14 +120,14 @@ const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
   return (
     <div ref={containerRef}>
       {orderedTasks.map((task, index) => (
-        <div
-          key={task.id} 
-          style={{
-            visibility: isBeingDragged(task.id) ? "hidden" : "visible",
-          }}
-          onDoubleClick={(e) => taskDragStarted(task, index, e)}>
-          <TaskCard key={task.id} task={task} />
-        </div>
+        <Box
+          component={"div"}
+          key={task.id}
+          bgcolor={isBeingDragged(task.id) ? "#001F3D" : "transparent"}
+          onDoubleClick={(e) => taskDragStarted(task, index, e)}
+        >
+          <TaskCard key={task.id} task={task} hide={isBeingDragged(task.id)}/>
+        </Box>
       ))}
       {
         drag && (
