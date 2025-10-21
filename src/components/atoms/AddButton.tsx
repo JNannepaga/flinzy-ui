@@ -14,7 +14,6 @@ const AddButton: React.FC<AddButtonProps> = ({ onClick }) => {
       startIcon={<AddIcon />}
       onClick={onClick}
       sx={{
-        width: '100%',
         height: 40,
         my: 2,
         bgcolor: '#386641',
